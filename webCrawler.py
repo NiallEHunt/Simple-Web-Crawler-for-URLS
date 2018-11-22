@@ -7,7 +7,11 @@ import argparse
 # returns False if the unique_links set is not full (ie. less than N links)
 def find_links_on_page(url, N):
     # Use requests to get the raw text of the page
-    raw_data = requests.get(url).text
+    try:
+        raw_data = requests.get(url).text
+    except:
+        print("Invalid url")
+        return False
 
     # Use BeautifulSoup to scrape the a tags
     scraper = BeautifulSoup(raw_data, "html.parser")
@@ -16,6 +20,9 @@ def find_links_on_page(url, N):
 
         # If the link doesn't start with http it must be a relative link
         # ie a link to another page with the same base url
+        if link is None:
+            break
+
         if link[:4] != 'http':
             link = url + link
 
