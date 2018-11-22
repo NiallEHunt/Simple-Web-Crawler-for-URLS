@@ -1,10 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 
-# Using a set as each element in a set can only appear once. Therefore, we end
-# up with a set of all the unique links
-unique_links = set()
-
 # Finds all the links on the given page and adds them to the unique_links set
 # returns True if the unique_links set is full (ie. has N links)
 # returns False if the unique_links set is not full (ie. less than N links)
@@ -29,8 +25,17 @@ def find_links_on_page(url, N):
 
     return False
 
-find_links_on_page('http://www.bbc.com', 100)
+# Using a set as each element in a set can only appear once. Therefore, we end
+# up with a set of all the unique links
+unique_links = set()
+
+# Set the upper bound of the set (ie. how many unique urls you want to print)
+upper_bound = 150
+finished = False
+url = 'https://www.youtube.com/watch?v=oYqyzctGCHs'
+while not finished:
+    finished = find_links_on_page(url, upper_bound)
+    url = unique_links.pop()
+    unique_links.add(url)
 for link in unique_links:
     print(link)
-
-print(len(unique_links))
