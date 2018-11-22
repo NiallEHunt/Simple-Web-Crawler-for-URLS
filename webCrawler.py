@@ -8,9 +8,10 @@ def find_links_on_page(url):
     scraper = BeautifulSoup(raw_data, "html.parser")
     for tag in scraper.findAll('a'):
         link = tag.get('href')
-        if link[0] == '/':
+        if link[:4] != 'http':
             link = url + link
         unique_links.add(link)
 
 find_links_on_page('http://www.bbc.com')
-print(len(unique_links))
+for link in unique_links:
+    print(link)
