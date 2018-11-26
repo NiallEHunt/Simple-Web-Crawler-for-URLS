@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 import argparse
 
 # Finds all the links on the given page and adds them to the unique_links set
@@ -23,10 +24,7 @@ def find_links_on_page(url, N):
         if link is None:
             break
 
-        if link[:4] != 'http':
-            link = url + link
-
-        unique_links.add(link)
+        unique_links.add(urljoin(url, link))
         # Once we have found N unique_links return True
         if len(unique_links) >= N:
             return True
