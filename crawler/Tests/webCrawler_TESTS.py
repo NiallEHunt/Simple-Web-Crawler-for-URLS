@@ -1,6 +1,7 @@
 # I wasn't able to get the package structure to work for me so I'm just going to use this simple method instead
 import sys
 sys.path.append('../')
+from io import TextIOWrapper, BytesIO
 from fetch import find_links_on_page
 import unittest
 from unittest import mock
@@ -50,34 +51,48 @@ class TestWebCrawlerNLinks(unittest.TestCase):
         links = find_links_on_page('http://single_page_site.com', 100, links)
         self.assertEqual(len(links), 0, "Length of links should equal 0")
 
-#     def test_for_500_links_bbc(self):
-#         output = subprocess.check_output(["python", "webCrawler.py", "-n", "500"])
-#         links = output.splitlines()
-#         self.assertEqual(len(links), 500, "Length of links should equal 500")
-#
-#     def test_for_100_small_site(self):
-#         output = subprocess.check_output(["python", "webCrawler.py", "-url", "https://www.scss.tcd.ie/John.Waldron/3071/3071.html"])
-#         links = output.splitlines()
-#         self.assertLess(len(links), 100, "Length of links should be less than N as site crawling from this start won't find 100 links")
-#
-#     def test_for_100_no_links_site(self):
-#         output = subprocess.check_output(["python", "webCrawler.py", "-url", "https://www.ghacks.net/wp-content/uploads/2007/03/encrypt-url.jpg"])
-#         links = output.splitlines()
-#         self.assertLess(len(links), 100, "Length of links should be less than N as site crawling from this start won't find 100 links")
-#
-# class TestWebCrawlerIncorrectURL(unittest.TestCase):
-#     def test_for_incorrect_url(self):
-#         output = subprocess.check_output(["python", "webCrawler.py", "-url", "fake.url.for/testing"])
-#         links = output.splitlines()
-#         strings = []
-#         for link in links:
-#             strings.append(str(link))
-#         self.assertIn("b'Invalid url'", strings)
-#
-#     def test_for_fake_url(self):
-#         output = subprocess.check_output(["python", "webCrawler.py", "-url", "https://www.fake.site/testing"])
-#         links = output.splitlines()
-#         strings = []
-#         for link in links:
-#             strings.append(str(link))
-#         self.assertIn("b'Invalid url'", strings)
+    @mock.patch('requests.Session.get', side_effect=mocked_requests_get)
+    def test_for_100_links_large_site(self, mock_get):
+        links = set()
+        links = find_links_on_page('http://small_site_links_to_large.com', 100, links)
+        url = list(links)[0]
+        links = find_links_on_page(url, 100, links)
+        self.assertEqual(len(links), 100, "Length of links should equal 100")
+
+
+class TestWebCrawlerIncorrectURL(unittest.TestCase):
+    @mock.patch('requests.Session.get', side_effect=mocked_requests_get)
+    def test_for_incorrect_url(self, mock_get):
+        # Check the output of the program for the printing of 'Invalid url'
+        # This is done by changing the stdout before running the function and checking
+        # our new buffer for the string. We then restore stdout
+        old_stdout = sys.stdout
+        sys.stdout = TextIOWrapper(BytesIO(), sys.stdout.encoding)
+
+        links = set()
+        links = find_links_on_page("fake.path.test", 100, list)
+
+        sys.stdout.seek(0)
+        out = sys.stdout.read()
+
+        sys.stdout.close()
+        sys.stdout = old_stdout
+        self.assertIn("Invalid url", out)
+
+    @mock.patch('requests.Session.get', side_effect=mocked_requests_get)
+    def test_for_fake_url(self, mock_get):
+        # Check the output of the program for the printing of 'Invalid url'
+        # This is done by changing the stdout before running the function and checking
+        # our new buffer for the string. We then restore stdout
+        old_stdout = sys.stdout
+        sys.stdout = TextIOWrapper(BytesIO(), sys.stdout.encoding)
+
+        links = set()
+        links = find_links_on_page("http://www.fake.com/Testing", 100, list)
+
+        sys.stdout.seek(0)
+        out = sys.stdout.read()
+
+        sys.stdout.close()
+        sys.stdout = old_stdout
+        self.assertIn("Invalid url", out)
